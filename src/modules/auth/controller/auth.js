@@ -1,10 +1,10 @@
 import userModel from '../../../../DB/model/User.model.js';
 
-import {compareSync, hashSync } from '../../../utils/HashAndCompare.js';
+import { compareSync, hashSync } from '../../../utils/HashAndCompare.js';
 import sendEmail from '../../../utils/email.js';
 import { asyncHandler } from '../../../utils/errorHandling.js';
 import { customAlphabet } from 'nanoid';
-import { generateToken, verifyToken } from '../../../utils/generateAndVerifyToken.js';
+import jwt from 'jsonwebtoken';
 
 //signUp
 export const signUp = asyncHandler(async (req, res, next) => {
@@ -16,17 +16,21 @@ export const signUp = asyncHandler(async (req, res, next) => {
   }
   let html;
   //confirm email
-  const token = generateToken({
-    payload: { email },
-    expiresIn: 60 * 5,
-    signature: process.env.TOKEN_SIGNATURE,
-  });
+  const token = jwt.sign(
+    {
+      email,
+    },
+    { expiresIn: 60 * 5 },
+    { signature: process.env.TOKEN_SIGNATURE }
+  );
   const link = `${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}`;
-  const rfToken = generateToken({
-    payload: { email },
-    expiresIn: 60 * 60 * 24,
-    signature: process.env.TOKEN_SIGNATURE,
-  });
+  const rfToken = jwt.sign(
+    {
+      email,
+    },
+    { expiresIn: 60 * 60 * 24 },
+    { signature: process.env.TOKEN_SIGNATURE }
+  );
   const rfLink = `${req.protocol}://${req.headers.host}/auth/requestNewConfirmEmail/${rfToken}`;
 
   await sendEmail({
@@ -153,7 +157,7 @@ export const badAccount = asyncHandler(async (req, res, next) => {
 //confirmEmail
 export const confirmEmail = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
-  const { email } = verifyToken({
+  const { email } = jwt.verify({
     token,
     signature: process.env.TOKEN_SIGNATURE,
   });
@@ -171,7 +175,7 @@ export const confirmEmail = asyncHandler(async (req, res, next) => {
 //requestNewConfonfirmEmail
 export const requestNewConfirmEmail = asyncHandler(async (req, res, next) => {
   const { token } = req.params;
-  const { email } = verifyToken({
+  const { email } = jwt.verify({
     token,
     signature: process.env.TOKEN_SIGNATURE,
   });
@@ -183,11 +187,13 @@ export const requestNewConfirmEmail = asyncHandler(async (req, res, next) => {
       .status(200)
       .send('<p>Your account is already confirmed go to login page</p>');
   }
-  const newToken = generateToken({
-    payload: { email },
-    expiresIn: 60 * 2,
-    signature: process.env.TOKEN_SIGNATURE,
-  });
+  const newToken = jwt.sign(
+    {
+      email,
+    },
+    { expiresIn: 60 * 2 },
+    { signature: process.env.TOKEN_SIGNATURE }
+  );
   const link = `${req.protocol}://${req.headers.host}/auth/confirmEmail/${newToken}`;
 
   const rfLink = `${req.protocol}://${req.headers.host}/auth/reqNewEmail/${token}`;
@@ -312,7 +318,7 @@ export const logIn = asyncHandler(async (req, res, next) => {
   }
 
   if (!user.confirmEmail) {
-    return next(new Error('please confirm your email First'),{cause:403});
+    return next(new Error('please confirm your email First'), { cause: 403 });
   }
 
   if (
@@ -323,15 +329,21 @@ export const logIn = asyncHandler(async (req, res, next) => {
   ) {
     return next(new Error('In-valid login data'));
   }
-  const token = generateToken({
-    payload: { id: user._id, role: user.role },
-    expiresIn: 60 * 30,
-  });
-  const refresh_Token = generateToken({
-    payload: { id: user._id, role: user.role },
-    expiresIn: 60 * 60 * 24 * 365,
-  });
-  await userModel.updateOne({email},{status:'Online'})
+  const token = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+    },
+    { expiresIn: 60 * 30 }
+  );
+  const refresh_Token = jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+    },
+    { expiresIn: 60 * 60 * 24 * 365 }
+  );
+  await userModel.updateOne({ email }, { status: 'Online' });
   await userModel.save;
   return res.status(200).json({ message: 'Done', token, refresh_Token });
 });
@@ -436,9 +448,7 @@ export const sendCode = asyncHandler(async (req, res, next) => {
         </body>
         </html>`;
   if (!sendEmail({ to: email, subject: 'Forget Password', html })) {
-    return next(
-      new Error('Email rejected',{cause:404})
-    );
+    return next(new Error('Email rejected', { cause: 404 }));
   }
   return res.status(200).json({ message: 'Done' });
 });
