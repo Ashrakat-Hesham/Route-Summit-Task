@@ -12,7 +12,9 @@ const initApp = (app, express) => {
 
   //convert Buffer Data
   app.use(express.json({}));
-
+  app.use('/', (req, res, next) => {
+    return res.json({ message: 'Welcome to Route Summit' });
+  });
   //Setup API Routing
   app.use(`/auth`, authRouter);
   app.use(`/task`, tasksRouter);
