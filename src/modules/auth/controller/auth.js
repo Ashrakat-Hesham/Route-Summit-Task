@@ -1,12 +1,10 @@
 import userModel from '../../../../DB/model/User.model.js';
-import {
-  generateToken,
-  verifyToken,
-} from '../../../utils/generateAndVerifyToken.js';
+
 import {compareSync, hashSync } from '../../../utils/HashAndCompare.js';
 import sendEmail from '../../../utils/email.js';
 import { asyncHandler } from '../../../utils/errorHandling.js';
 import { customAlphabet } from 'nanoid';
+import { generateToken, verifyToken } from '../../../utils/GenerateAndVerifyToken.js';
 
 //signUp
 export const signUp = asyncHandler(async (req, res, next) => {
