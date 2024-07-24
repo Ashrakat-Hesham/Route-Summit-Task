@@ -4,7 +4,7 @@ import {compareSync, hashSync } from '../../../utils/HashAndCompare.js';
 import sendEmail from '../../../utils/email.js';
 import { asyncHandler } from '../../../utils/errorHandling.js';
 import { customAlphabet } from 'nanoid';
-import { generateToken, verifyToken } from '../../../utils/GenerateAndVerifyToken.js';
+import { generateToken, verifyToken } from '../../../utils/generateAndVerifyToken.js';
 
 //signUp
 export const signUp = asyncHandler(async (req, res, next) => {
