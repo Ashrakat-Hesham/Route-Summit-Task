@@ -1,5 +1,4 @@
 import userModel from '../../../../DB/model/User.model.js';
-
 import { compareSync, hashSync } from '../../../utils/HashAndCompare.js';
 import sendEmail from '../../../utils/email.js';
 import { asyncHandler } from '../../../utils/errorHandling.js';
