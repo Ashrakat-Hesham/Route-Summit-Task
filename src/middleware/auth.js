@@ -1,6 +1,6 @@
 import userModel from '../../DB/model/User.model.js';
 import { asyncHandler } from '../utils/errorHandling.js';
-import { verifyToken } from '../utils/generateAndVerifyToken.js';
+import jwt from 'jsonwebtoken';
 
 export const auth = () => {
   return asyncHandler(async (req, res, next) => {
@@ -12,7 +12,7 @@ export const auth = () => {
     if (!token) {
       return next(new Error('Invalid token', { cause: 400 }));
     }
-    const decoded = verifyToken({ token });
+    const decoded = jwt.sign({ token });
     if (!decoded?.id) {
       return next(new Error('Invalid token payload', { cause: 400 }));
     }
